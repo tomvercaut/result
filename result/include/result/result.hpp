@@ -659,4 +659,26 @@ constexpr bool operator<(const result<U, Er> &lhs, const result<U, Er> &rhs) {
 
 } // namespace result
 
+namespace std {
+template <typename T, typename E> struct hash<::result::result<T, E>> {
+  size_t operator()(const ::result::result<T, E> &result) const noexcept {
+    bool is_ok = result.is_ok();
+    size_t h1 = is_ok ? 1 : 0;
+    size_t h2;
+    if (result.is_ok()) {
+      auto value = result.ok();
+      if (value) {
+        h2 = std::hash<T>{}(value.value().get());
+      }
+    } else {
+      auto value = result.err();
+      if (value) {
+        h2 = std::hash<E>{}(value.value().get());
+      }
+    }
+    return h1 ^ (h2 << 1);
+  }
+};
+} // namespace std
+
 #endif // RESULT_RESULT_HPP

@@ -513,3 +513,19 @@ TEST_CASE("result<T, E> transformations") {
     REQUIRE(r3.or_else(fun) == result_type3(result::err(false)));
   }
 }
+
+TEST_CASE("std::hash<result<T, E>>", "[std::hash]") {
+  result_type1 r0(ok_type1("abc"));
+  result_type1 r1(ok_type1("abc"));
+  result_type2 r2(err_type1("abc"));
+  REQUIRE(std::hash<result_type1>{}(r0) == std::hash<result_type1>{}(r1));
+  // comparing the same value but with a different 'state' ok vs err
+  REQUIRE(std::hash<result_type1>{}(r1) != std::hash<result_type2>{}(r2));
+
+  result_type2 r3(ok_type2(5.0));
+  result_type2 r4(ok_type2(5.0));
+  result_type1 r5(err_type2(5.0));
+  REQUIRE(std::hash<result_type2>{}(r3) == std::hash<result_type2>{}(r4));
+  // comparing the same value but with a different 'state' ok vs err
+  REQUIRE(std::hash<result_type2>{}(r3) != std::hash<result_type1>{}(r5));
+}
