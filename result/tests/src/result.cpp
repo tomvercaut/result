@@ -2,7 +2,6 @@
 #include <catch2/catch_test_macros.hpp>
 #include <compare>
 #include <string>
-#include <utility>
 
 using result_type1 = result::result<std::string, double>;
 using result_type2 = result::result<double, std::string>;
@@ -417,7 +416,7 @@ TEST_CASE("result<T, E>::unwrap_err_or_default()", "[result<T, E>]") {
   REQUIRE(r1.unwrap_err_or_default() == double());
 }
 
-TEST_CASE("result<T, E> transformations") {
+TEST_CASE("result<T, E> transformations", "[result<T, E>]") {
   SECTION("map") {
     result_type1 r1(ok_type1("abc"));
     auto fun = [](const std::string &x) {
@@ -528,4 +527,59 @@ TEST_CASE("std::hash<result<T, E>>", "[std::hash]") {
   REQUIRE(std::hash<result_type2>{}(r3) == std::hash<result_type2>{}(r4));
   // comparing the same value but with a different 'state' ok vs err
   REQUIRE(std::hash<result_type2>{}(r3) != std::hash<result_type1>{}(r5));
+}
+
+TEST_CASE("result<T, E> comparison", "[result<T, E>]") {
+  SECTION("ok vs err") {
+    bool b;
+    result_type1 r0(ok_type1("abc"));
+    result_type1 r1(err_type2(5.0));
+    auto c = r0 <=> r1;
+    b = c > 0;
+    REQUIRE(b);
+  }
+  SECTION("comparing std::string results") {
+    result_type1 r0(ok_type1("abc"));
+    result_type1 r1(ok_type1("abcd"));
+    auto c = r0 <=> r1;
+    REQUIRE((c < 0));
+    REQUIRE((c <= 0));
+    REQUIRE_FALSE((c == 0));
+    REQUIRE_FALSE((c >= 0));
+    REQUIRE_FALSE((c > 0));
+    c = r1 <=> r0;
+    REQUIRE((c > 0));
+    REQUIRE((c >= 0));
+    REQUIRE_FALSE((c == 0));
+    REQUIRE_FALSE((c <= 0));
+    REQUIRE_FALSE((c < 0));
+  }
+  SECTION("comparing doubles") {
+    result_type2 r0(ok_type2(5.0));
+    result_type2 r1(ok_type2(6.0));
+    auto c = r0 <=> r1;
+    REQUIRE((c < 0));
+    REQUIRE((c <= 0));
+    REQUIRE_FALSE((c == 0));
+    REQUIRE_FALSE((c >= 0));
+    REQUIRE_FALSE((c > 0));
+    c = r1 <=> r0;
+    REQUIRE((c > 0));
+    REQUIRE((c >= 0));
+    REQUIRE_FALSE((c == 0));
+    REQUIRE_FALSE((c <= 0));
+    REQUIRE_FALSE((c < 0));
+  }
+  SECTION("comparing with empty_tag_t") {
+    using ok_type3 = result::ok<result::empty_tag_t>;
+    using result_type3 = result::result<result::empty_tag_t, double>;
+    result_type3 r0((ok_type3()));
+    result_type3 r1((ok_type3()));
+    auto c = r0 <=> r1;
+    REQUIRE((c == 0));
+    REQUIRE((c >= 0));
+    REQUIRE((c <= 0));
+    REQUIRE_FALSE((c > 0));
+    REQUIRE_FALSE((c < 0));
+  }
 }

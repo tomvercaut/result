@@ -646,15 +646,48 @@ private:
   result_type m_type;
 };
 
-template <typename U, typename Er>
-constexpr bool operator<(const result<U, Er> &lhs, const result<U, Er> &rhs) {
-  if (lhs.is_ok() && rhs.is_ok()) {
-    return lhs.ok_unchecked() < rhs.ok_unchecked();
+/**
+ * Compare two results and their respective values if any are stored.
+ *
+ * If the result type (ok or err) is not identical between both results,
+ * the function returns the comparison between the result types.
+ * Ok results will be considered 'greater' compared to error results.
+ *
+ * If both results store an ok value, a three-way comparison is done of
+ * their respective values.
+ *
+ * In all other cases, the results are compared based on if they store an
+ * ok value.
+ *
+ * Error values are never compared on their internal values.
+ *
+ * @tparam T value type
+ * @tparam E error type
+ * @tparam R comparison type derived from T <=> T
+ *           (std::partial_ordering, std::weak_ordering, std::strong_ordering)
+ * @param lhs left hand side result
+ * @param rhs right hand side result
+ * @return
+ */
+template <typename T, typename E, typename R= std::compare_three_way_result_t<T> >
+R operator<=>(const result<T, E> &lhs, const result<T, E> &rhs) {
+  auto lok = lhs.is_ok() ? 1 : 0;
+  auto rok = rhs.is_ok() ? 1 : 0;
+  if (auto c = lok <=> rok; c != 0)
+    return c;
+  auto lopt = lhs.ok();
+  auto ropt = rhs.ok();
+  lok = lopt.has_value() ? 1 : 0;
+  rok = ropt.has_value() ? 1 : 0;
+  if (lok == rok) {
+    if (lok) {
+      // compare both values
+      const auto &lv = lopt.value().get();
+      const auto &rv = ropt.value().get();
+      return lv <=> rv;
+    }
   }
-  if (lhs.is_err() && rhs.is_err()) {
-    return lhs.err_unchecked() < rhs.err_unchecked();
-  }
-  return lhs.is_err() && rhs.is_ok();
+  return lok <=> rok;
 }
 
 } // namespace result
