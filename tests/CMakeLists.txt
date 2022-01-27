@@ -1,4 +1,16 @@
-find_package(Catch2 3.0.0 REQUIRED)
+find_package(Catch2 3.0.0 QUIET)
+
+if (NOT Catch2_FOUND)
+    include(FetchContent)
+    FetchContent_Declare(
+            Catch2
+            GIT_REPOSITORY https://github.com/catchorg/Catch2
+            GIT_TAG v3.0.0-preview4
+    )
+    FetchContent_MakeAvailable(Catch2)
+    message(STATUS "Catch2 available in: ${Catch2_SOURCE_DIR}")
+    list(APPEND CMAKE_MODULE_PATH ${Catch2_SOURCE_DIR}/extras)
+endif()
 
 add_executable(result_test
         src/main.cpp
