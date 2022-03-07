@@ -414,6 +414,10 @@ TEST_CASE("result<T, E>::unwrap_err_or_default()", "[result<T, E>]") {
   result_type1 r1(s1);
   REQUIRE(r1.is_ok());
   REQUIRE(r1.unwrap_err_or_default() == double());
+  result::err<std::string> e1("abc");
+  result_type2 r2(e1);
+  REQUIRE(r2.is_err());
+  REQUIRE(r2.unwrap_err_or_default() == std::string("abc"));
 }
 
 TEST_CASE("result<T, E> transformations", "[result<T, E>]") {

@@ -2,6 +2,7 @@
 #define RESULT_RESULT_HPP
 
 #include <compare>
+#include <functional>
 #include <iostream>
 #include <optional>
 #include <type_traits>
@@ -534,9 +535,9 @@ public:
     return std::move(*this).err_unchecked();
   }
 
-  [[maybe_unused]] constexpr E &&unwrap_err_or_default() {
+  [[maybe_unused]] constexpr E unwrap_err_or_default() {
     if (!is_err()) {
-      return std::move(E());
+      return E{};
     }
     return std::move(*this).err_unchecked();
   }
@@ -669,7 +670,8 @@ private:
  * @param rhs right hand side result
  * @return
  */
-template <typename T, typename E, typename R= std::compare_three_way_result_t<T> >
+template <typename T, typename E,
+          typename R = std::compare_three_way_result_t<T>>
 R operator<=>(const result<T, E> &lhs, const result<T, E> &rhs) {
   auto lok = lhs.is_ok() ? 1 : 0;
   auto rok = rhs.is_ok() ? 1 : 0;
